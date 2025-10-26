@@ -22,9 +22,6 @@ corridor = Polygon(list(top_line.coords) + list(bottom_line.coords)[::-1])
           "data/layers/sea.shp", "data/layers/urban.shp", "data/layers/urban.shp", 
           "data/layers/grid_50.shp", "data/layers/images.shp", "data/layers/NUTS.shp", "data/layers/CEMT.shp", "data/layers/grid_250.shp"]"""
           
-          
-layers = [r"G:\.shortcut-targets-by-id\1xXF4_DHb79MFlyi9vLdZcN_SagP0sxVr\Academie Beaux Arts\01-GIS\01-Layers\TENtec\inland_waterways.shp"]
-
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 axs[0].set_title("Original geometries")
 axs[1].set_title("Straightened geometries (s,n)")
