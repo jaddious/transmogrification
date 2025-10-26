@@ -170,33 +170,6 @@ Convert a single geometry **to** or **from** the corridor frame. Handles `Point`
 
 ---
 
-## Known quirks & footguns
-
-1. **External `u` scaling**: `map_xy_to_uv` returns `u_public = -8·\tilde u`, but `map_uv_to_xy` clamps its input to `[0,1]`. Avoid passing the public `u` back into `map_uv_to_xy` without rescaling. Consider removing the scaling for a cleaner API.
-2. **Duplicate helper definitions**: `_resample_line` and `_smooth_monotone_s` appear twice. Prefer the first definitions; consider removing the duplicates to avoid import-time shadowing and confusion.
-3. **Object‑identity cache**: The corridor cache keys by the **identity** of the `LineString` objects, not value-equality. If you recreate identical geometries, you won’t hit the cache.
-4. **Degenerate lines**: A `LineString` with one vertex is normalized to two identical points; projections collapse to that point.
-
----
-
-## Testing guidelines
-
-* **Round‑trip**: Sample random points in the corridor, transform XY→UV (rescale u)→XY and assert sub‑millimetre error within your units.
-* **Monotonicity**: For random polyline pairs, verify that precomputed vertex stations `s_k` are strictly increasing after smoothing.
-* **Edge cases**: Extremely narrow cross sections; zero-length segments; very short centerlines; cusps.
-* **Performance**: Benchmark batched projections (≥ 10⁴ points). Expect vectorized speed‑ups vs. naïve Shapely ops.
-
----
-
-## Complexity (rough)
-
-* Precompute `_CorridorCtx`: (O(N_c + N_t + N_b)) with vectorized passes.
-* Query `map_xy_to_uv`: one (O(N_c)) projection plus constant‑time local ops.
-* Query `map_uv_to_xy`: two binary searches over boundary vertex stations ((O(\log N))) plus constant‑time blends.
-
----
-
-## Design notes
 
 * **Arclength‑consistent pairing** of top/bottom with the centerline avoids the drift you get from naïve parameterizations by vertex index.
 * **Uniform resampling** stabilizes inversion and removes sensitivity to heterogeneous vertex spacing.
@@ -205,29 +178,7 @@ Convert a single geometry **to** or **from** the corridor frame. Handles `Point`
 
 ---
 
-## FAQ
+## Images
 
-**Q: Is the mapping conformal or area‑preserving?**
-*A:* No. It is a piecewise‑linear cross‑sectional warp anchored to the centerline stationing. It preserves station order and interpolates linearly across width.
-
-**Q: Can I use splines instead of piecewise linear frames?**
-*A:* Yes—replace boundary interpolation with a spline over `(s_k, points_k)`; keep the station arrays monotone.
-
-**Q: What if the corridor boundaries cross or fold back?**
-*A:* The monotone station enforcement mitigates backtracking artifacts, but if the boundary truly folds w.r.t. the centerline, the local cross‑section may not be one‑to‑one.
-
----
-
-## Changelog (this optimized version)
-
-* Vectorized segment projection across the whole polyline (`_Poly.project_u`).
-* Pre‑resample top/bottom to uniform arclength before stationing.
-* Weak monotonicity + FIR smoothing + strict monotonicity for vertex stations.
-* Identity‑based weakref cache for corridor contexts.
-* Robust edge handling (degenerate center or zero‑width frames).
-
----
-
-## License
-
-MIT
+![Straightening demo](images/before.png)
+![Straightening demo](images/after.jpg)
